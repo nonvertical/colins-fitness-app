@@ -7,38 +7,36 @@ import {
   Header,
   PageTitle,
   DateLabel,
-  WeekSection,
-  SectionTitle,
+  WidgetGrid,
+  Widget,
+  WidgetHeader,
+  WidgetTitle,
+  WidgetAction,
   WeekGrid,
   DayColumn,
   DayLabel,
   DayNumber,
   DayDots,
   WorkoutDot,
-  DayDetail,
-  DayDetailHeader,
   DayWorkoutRow,
   DayWorkoutName,
   DayWorkoutStatus,
   EmptyDay,
-  HabitsSection,
   HabitCard,
   HabitCardInfo,
   HabitCardName,
   HabitCardMeta,
   StreakBadge,
+  PercentBadge,
   DoneCheck,
   HabitQuickButton,
-  EmptyHabits,
+  TypeLabel,
+  EmptyWidget,
+  HealthStat,
+  HealthStatLabel,
+  HealthStatValue,
   QuickActions,
   QuickActionButton,
-  ModalBackdrop,
-  ModalSheet,
-  ModalHandle,
-  ModalTitle,
-  DurationGrid,
-  DurationButton,
-  EmptyDurationState,
 } from './styles';
 
 function todayStr() {
@@ -109,14 +107,17 @@ function computeStreak(logs, habitId) {
   return streak;
 }
 
-function computeYearTotal(logs, habitId) {
-  const yearStart = new Date(new Date().getFullYear(), 0, 1);
+function computePercentage(logs, habitId, daysBack) {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - daysBack);
+  start.setHours(0, 0, 0, 0);
+
   const habitLogs = logs
-    .filter((l) => l.habit_id === habitId && new Date(l.timestamp) >= yearStart)
+    .filter((l) => l.habit_id === habitId && new Date(l.timestamp) >= start)
     .map((l) => l.timestamp.split('T')[0]);
   const uniqueDays = new Set(habitLogs);
-  const totalDays = daysBetween(yearStart, new Date()) + 1;
-  return { done: uniqueDays.size, total: totalDays };
+  return Math.round((uniqueDays.size / daysBack) * 100);
 }
 
 function isDoneToday(logs, habitId) {
@@ -124,27 +125,30 @@ function isDoneToday(logs, habitId) {
   return logs.some((l) => l.habit_id === habitId && l.timestamp.startsWith(today));
 }
 
-function formatDuration(minutes) {
-  if (minutes >= 60) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (m === 0) return h + 'h';
-    return h + 'h ' + m + 'm';
-  }
-  return minutes + 'm';
+function todayCount(logs, habitId) {
+  const today = todayStr();
+  return logs.filter((l) => l.habit_id === habitId && l.timestamp.startsWith(today)).length;
 }
+
+const DEFAULT_PROFILE = {
+  weight: null,
+  weight_unit: 'lbs',
+  body_fat: null,
+  goals: [],
+  prs: [],
+  custom_metrics: [],
+};
 
 export default function Home() {
   const [workouts] = useLocalStorage('workouts', []);
   const [habits] = useLocalStorage('habits', []);
   const [habitLogs, setHabitLogs] = useLocalStorage('habit_logs', []);
+  const [profile] = useLocalStorage('health_profile', DEFAULT_PROFILE);
   const [selectedDay, setSelectedDay] = useState(todayStr());
-  const [durationModal, setDurationModal] = useState(null);
   const navigate = useNavigate();
 
   const weekDays = getWeekDays();
   const today = todayStr();
-  const currentYear = new Date().getFullYear();
 
   const todayFormatted = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -153,47 +157,34 @@ export default function Home() {
     year: 'numeric',
   });
 
-  // Workouts for each day
+  // Active habits only
+  const activeHabits = habits.filter((h) => h.active !== false);
+
   function workoutsForDay(dateStr) {
     return workouts.filter((w) => w.date === dateStr);
   }
 
   const selectedDayWorkouts = workoutsForDay(selectedDay);
   const selectedDayLabel = new Date(selectedDay + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'long',
+    weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
 
   // Habit logging
-  function logOncePerDay(habitId) {
+  function logDaily(habitId) {
     if (isDoneToday(habitLogs, habitId)) return;
     setHabitLogs((prev) => [
       ...prev,
-      {
-        id: generateId(),
-        habit_id: habitId,
-        timestamp: new Date().toISOString(),
-        value: true,
-      },
+      { id: generateId(), habit_id: habitId, timestamp: new Date().toISOString(), value: true },
     ]);
   }
 
-  function logDuration(minutes) {
+  function logIrregular(habitId) {
     setHabitLogs((prev) => [
       ...prev,
-      {
-        id: generateId(),
-        habit_id: durationModal.id,
-        timestamp: new Date().toISOString(),
-        value: minutes,
-      },
+      { id: generateId(), habit_id: habitId, timestamp: new Date().toISOString(), value: true },
     ]);
-    setDurationModal(null);
-  }
-
-  function handleDurationBackdropClick(e) {
-    if (e.target === e.currentTarget) setDurationModal(null);
   }
 
   return (
@@ -203,97 +194,134 @@ export default function Home() {
         <DateLabel>{todayFormatted}</DateLabel>
       </Header>
 
-      {/* ─── Week View ────────────────────────────────────────────────────── */}
-      <WeekSection>
-        <SectionTitle>This Week</SectionTitle>
-        <WeekGrid>
-          {weekDays.map((day) => {
-            const dayWorkouts = workoutsForDay(day.date);
-            const isToday = day.date === today;
-            return (
-              <DayColumn
-                key={day.date}
-                $isToday={isToday}
-                onClick={() => setSelectedDay(day.date)}
-              >
-                <DayLabel>{day.dayLabel}</DayLabel>
-                <DayNumber $isToday={isToday}>{day.dayNumber}</DayNumber>
-                <DayDots>
-                  {dayWorkouts.map((w) => (
-                    <WorkoutDot key={w.id} $status={computeDisplayStatus(w)} />
-                  ))}
-                </DayDots>
-              </DayColumn>
-            );
-          })}
-        </WeekGrid>
-      </WeekSection>
+      <WidgetGrid>
+        {/* ─── Workouts Widget ──────────────────────────────────────────── */}
+        <Widget>
+          <WidgetHeader>
+            <WidgetTitle>Training</WidgetTitle>
+            <WidgetAction onClick={() => navigate('/workouts')}>View All</WidgetAction>
+          </WidgetHeader>
 
-      {/* ─── Selected Day Detail ──────────────────────────────────────────── */}
-      <DayDetail>
-        <DayDetailHeader>{selectedDayLabel}</DayDetailHeader>
-        {selectedDayWorkouts.length === 0 ? (
-          <EmptyDay>No workouts scheduled</EmptyDay>
-        ) : (
-          selectedDayWorkouts.map((w) => {
-            const status = computeDisplayStatus(w);
-            return (
-              <DayWorkoutRow key={w.id} onClick={() => navigate('/workouts')}>
-                <DayWorkoutName>{w.name}</DayWorkoutName>
-                <DayWorkoutStatus $status={status}>{status}</DayWorkoutStatus>
-              </DayWorkoutRow>
-            );
-          })
-        )}
-      </DayDetail>
+          <WeekGrid>
+            {weekDays.map((day) => {
+              const dayWorkouts = workoutsForDay(day.date);
+              const isToday = day.date === today;
+              return (
+                <DayColumn
+                  key={day.date}
+                  $isToday={isToday}
+                  onClick={() => setSelectedDay(day.date)}
+                >
+                  <DayLabel>{day.dayLabel}</DayLabel>
+                  <DayNumber $isToday={isToday}>{day.dayNumber}</DayNumber>
+                  <DayDots>
+                    {dayWorkouts.map((w) => (
+                      <WorkoutDot key={w.id} $status={computeDisplayStatus(w)} />
+                    ))}
+                  </DayDots>
+                </DayColumn>
+              );
+            })}
+          </WeekGrid>
 
-      {/* ─── Habits Strip ─────────────────────────────────────────────────── */}
-      <HabitsSection>
-        <SectionTitle>Habits</SectionTitle>
-        {habits.length === 0 ? (
-          <EmptyHabits>No habits tracked yet</EmptyHabits>
-        ) : (
-          habits.slice(0, 3).map((habit) => {
-            const streak = computeStreak(habitLogs, habit.id);
-            const yearTotal = computeYearTotal(habitLogs, habit.id);
-            const doneToday = isDoneToday(habitLogs, habit.id);
+          {selectedDayWorkouts.length === 0 ? (
+            <EmptyDay>{selectedDayLabel} — no workouts</EmptyDay>
+          ) : (
+            selectedDayWorkouts.map((w) => {
+              const status = computeDisplayStatus(w);
+              return (
+                <DayWorkoutRow key={w.id} onClick={() => navigate('/workouts')}>
+                  <DayWorkoutName>{w.name}</DayWorkoutName>
+                  <DayWorkoutStatus $status={status}>{status}</DayWorkoutStatus>
+                </DayWorkoutRow>
+              );
+            })
+          )}
+        </Widget>
 
-            return (
-              <HabitCard key={habit.id}>
-                <HabitCardInfo>
-                  <HabitCardName>{habit.name}</HabitCardName>
-                  <HabitCardMeta>
-                    {streak > 0 && (
-                      <StreakBadge>
-                        &#128293; {streak}d
-                      </StreakBadge>
-                    )}
-                    <span>{yearTotal.done}/{yearTotal.total} days in {currentYear}</span>
-                  </HabitCardMeta>
-                </HabitCardInfo>
-                {habit.type === 'once_per_day' && doneToday ? (
-                  <DoneCheck>&#10003;</DoneCheck>
-                ) : (
-                  <HabitQuickButton
-                    type="button"
-                    onClick={() => {
-                      if (habit.type === 'once_per_day') {
-                        logOncePerDay(habit.id);
-                      } else {
-                        setDurationModal(habit);
-                      }
-                    }}
-                  >
-                    +
-                  </HabitQuickButton>
-                )}
-              </HabitCard>
-            );
-          })
-        )}
-      </HabitsSection>
+        {/* ─── Habits Widget ────────────────────────────────────────────── */}
+        <Widget>
+          <WidgetHeader>
+            <WidgetTitle>Habits</WidgetTitle>
+            <WidgetAction onClick={() => navigate('/habits')}>View All</WidgetAction>
+          </WidgetHeader>
 
-      {/* ─── Quick Actions ────────────────────────────────────────────────── */}
+          {activeHabits.length === 0 ? (
+            <EmptyWidget>No active habits</EmptyWidget>
+          ) : (
+            activeHabits.map((habit) => {
+              const streak = computeStreak(habitLogs, habit.id);
+              const pct7 = computePercentage(habitLogs, habit.id, 7);
+              const doneToday = isDoneToday(habitLogs, habit.id);
+              const count = todayCount(habitLogs, habit.id);
+              const isDaily = habit.type !== 'irregular';
+
+              return (
+                <HabitCard key={habit.id}>
+                  <HabitCardInfo>
+                    <HabitCardName>{habit.name}</HabitCardName>
+                    <HabitCardMeta>
+                      <TypeLabel $type={habit.type}>
+                        {isDaily ? 'daily' : 'irregular'}
+                      </TypeLabel>
+                      {isDaily && streak > 0 && (
+                        <StreakBadge>&#128293; {streak}d</StreakBadge>
+                      )}
+                      {isDaily && (
+                        <PercentBadge $pct={pct7}>{pct7}% (7d)</PercentBadge>
+                      )}
+                      {!isDaily && count > 0 && (
+                        <span>{count}x today</span>
+                      )}
+                    </HabitCardMeta>
+                  </HabitCardInfo>
+                  {isDaily && doneToday ? (
+                    <DoneCheck>&#10003;</DoneCheck>
+                  ) : (
+                    <HabitQuickButton
+                      type="button"
+                      onClick={() => (isDaily ? logDaily(habit.id) : logIrregular(habit.id))}
+                    >
+                      +
+                    </HabitQuickButton>
+                  )}
+                </HabitCard>
+              );
+            })
+          )}
+        </Widget>
+
+        {/* ─── Health Profile Widget ────────────────────────────────────── */}
+        <Widget>
+          <WidgetHeader>
+            <WidgetTitle>Health</WidgetTitle>
+            <WidgetAction onClick={() => navigate('/health')}>View All</WidgetAction>
+          </WidgetHeader>
+
+          {profile.weight ? (
+            <HealthStat>
+              <HealthStatLabel>Weight</HealthStatLabel>
+              <HealthStatValue>{profile.weight} {profile.weight_unit}</HealthStatValue>
+            </HealthStat>
+          ) : null}
+          {profile.body_fat ? (
+            <HealthStat>
+              <HealthStatLabel>Body Fat</HealthStatLabel>
+              <HealthStatValue>{profile.body_fat}%</HealthStatValue>
+            </HealthStat>
+          ) : null}
+          {profile.prs && profile.prs.length > 0 && (
+            <HealthStat>
+              <HealthStatLabel>PRs</HealthStatLabel>
+              <HealthStatValue>{profile.prs.length} tracked</HealthStatValue>
+            </HealthStat>
+          )}
+          {!profile.weight && !profile.body_fat && (!profile.prs || profile.prs.length === 0) && (
+            <EmptyWidget>Tap "View All" to add health data</EmptyWidget>
+          )}
+        </Widget>
+      </WidgetGrid>
+
       <QuickActions>
         <QuickActionButton type="button" onClick={() => navigate('/workouts')}>
           + Workout
@@ -302,33 +330,6 @@ export default function Home() {
           + Habit
         </QuickActionButton>
       </QuickActions>
-
-      {/* ─── Duration Modal ───────────────────────────────────────────────── */}
-      {durationModal && (
-        <ModalBackdrop onClick={handleDurationBackdropClick}>
-          <ModalSheet>
-            <ModalHandle />
-            <ModalTitle>Log Duration</ModalTitle>
-            {durationModal.quick_select_options.length > 0 ? (
-              <DurationGrid>
-                {durationModal.quick_select_options.map((mins) => (
-                  <DurationButton
-                    key={mins}
-                    type="button"
-                    onClick={() => logDuration(mins)}
-                  >
-                    {formatDuration(mins)}
-                  </DurationButton>
-                ))}
-              </DurationGrid>
-            ) : (
-              <EmptyDurationState>
-                No quick select options configured. Edit this habit to add duration options.
-              </EmptyDurationState>
-            )}
-          </ModalSheet>
-        </ModalBackdrop>
-      )}
     </Page>
   );
 }

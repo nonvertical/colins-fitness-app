@@ -148,16 +148,27 @@ export const TypeBadge = styled.span`
   font-weight: 600;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: ${({ $type }) => {
-    if ($type === 'timed') return colors.unit.time;
-    if ($type === 'irregular') return colors.auxiliar.info;
-    return colors.auxiliar.success;
-  }};
-  background: ${({ $type }) => {
-    if ($type === 'timed') return `${colors.unit.time}22`;
-    if ($type === 'irregular') return `${colors.auxiliar.info}22`;
-    return `${colors.auxiliar.success}22`;
-  }};
+  color: ${({ $type }) => (
+    $type === 'irregular' ? colors.auxiliar.info : colors.auxiliar.success
+  )};
+  background: ${({ $type }) => (
+    $type === 'irregular' ? `${colors.auxiliar.info}22` : `${colors.auxiliar.success}22`
+  )};
+`;
+
+export const ActiveToggle = styled.button`
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid ${({ $active }) => ($active ? colors.auxiliar.success : colors.text.light.little)};
+  background: ${({ $active }) => ($active ? `${colors.auxiliar.success}33` : 'transparent')};
+  cursor: pointer;
+  transition: all ${metrics.transition.fast};
+
+  &:active {
+    transform: scale(0.9);
+  }
 `;
 
 export const DoneIndicator = styled.span`
@@ -318,78 +329,6 @@ export const TypeOption = styled.button`
   }
 `;
 
-export const QuickSelectChips = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-`;
-
-export const QuickSelectChip = styled.span`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-radius: ${metrics.radius.full};
-  font-size: 13px;
-  font-weight: 500;
-  background: ${colors.surfaceElevated};
-  border: 1px solid ${colors.border};
-  color: ${colors.text.light.very};
-`;
-
-export const ChipRemove = styled.button`
-  background: none;
-  border: none;
-  color: ${colors.text.light.medium};
-  font-size: 14px;
-  padding: 0 0 0 2px;
-  line-height: 1;
-  cursor: pointer;
-
-  &:active {
-    color: ${colors.auxiliar.danger};
-  }
-`;
-
-export const AddChipRow = styled.div`
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-`;
-
-export const SmallInput = styled.input`
-  flex: 1;
-  padding: 8px 10px;
-  background: ${colors.surfaceElevated};
-  border: 1px solid ${colors.border};
-  border-radius: ${metrics.radius.medium};
-  color: ${colors.text.light.very};
-  font-size: 13px;
-
-  &::placeholder {
-    color: ${colors.text.light.medium};
-  }
-
-  &:focus {
-    border-color: ${colors.primary.main};
-  }
-`;
-
-export const SmallButton = styled.button`
-  padding: 8px 14px;
-  background: ${colors.surfaceElevated};
-  border: 1px solid ${colors.border};
-  border-radius: ${metrics.radius.medium};
-  color: ${colors.text.light.medium};
-  font-size: 13px;
-  font-weight: 600;
-  transition: all ${metrics.transition.fast};
-
-  &:active {
-    background: ${colors.border};
-  }
-`;
-
 export const ModalActions = styled.div`
   display: flex;
   gap: 10px;
@@ -430,33 +369,6 @@ export const DeleteButton = styled.button`
 
   &:active {
     background: ${colors.auxiliar.danger}22;
-  }
-`;
-
-// ─── Duration Quick Select Modal ─────────────────────────────────────────────
-
-export const DurationGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-`;
-
-export const DurationButton = styled.button`
-  padding: 14px 8px;
-  border-radius: ${metrics.radius.medium};
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid ${colors.border};
-  background: ${colors.surfaceElevated};
-  color: ${colors.text.light.very};
-  transition: all ${metrics.transition.fast};
-  cursor: pointer;
-
-  &:active {
-    transform: scale(0.96);
-    border-color: ${colors.primary.main};
-    background: ${colors.primary.main}22;
-    color: ${colors.primary.main};
   }
 `;
 
@@ -594,13 +506,6 @@ export const StatValue = styled.span`
   font-size: 14px;
   font-weight: 600;
   color: ${colors.text.light.very};
-`;
-
-// ─── Quick Select Config ─────────────────────────────────────────────────────
-
-export const ConfigSection = styled.div`
-  padding: 16px 20px;
-  border-top: 1px solid ${colors.border};
 `;
 
 export const SectionTitle = styled.h3`

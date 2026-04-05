@@ -17,14 +17,7 @@ import {
   StatRow,
   StatLabel,
   StatValue,
-  ConfigSection,
   SectionTitle,
-  QuickSelectChips,
-  QuickSelectChip,
-  ChipRemove,
-  AddChipRow,
-  SmallInput,
-  SmallButton,
   CalendarSection,
   CalendarGrid,
   CalendarDayLabel,
@@ -63,14 +56,13 @@ function computeStreak(logs) {
   const today = todayStr();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayDate = yesterday.toISOString().split('T')[0];
 
-  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterdayStr) return 0;
+  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterdayDate) return 0;
 
   let streak = 1;
   for (let i = 1; i < uniqueDays.length; i += 1) {
-    const diff = daysBetween(uniqueDays[i - 1], uniqueDays[i]);
-    if (diff === 1) {
+    if (daysBetween(uniqueDays[i - 1], uniqueDays[i]) === 1) {
       streak += 1;
     } else {
       break;
@@ -79,53 +71,29 @@ function computeStreak(logs) {
   return streak;
 }
 
-function formatDuration(minutes) {
-  if (minutes >= 60) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (m === 0) return `${h}h`;
-    return `${h}h ${m}m`;
-  }
-  return `${minutes}m`;
-}
-
 const PERIODS = [
-  { key: 'week', label: 'This Week' },
-  { key: 'month', label: 'This Month' },
-  { key: 'quarter', label: 'This Quarter' },
-  { key: 'year', label: 'This Year' },
-  { key: 'all', label: 'Since Started' },
+  { key: 'week', label: '7 Days', days: 7 },
+  { key: 'month', label: '30 Days', days: 30 },
+  { key: '3month', label: '90 Days', days: 90 },
+  { key: 'all', label: 'Since Started', days: null },
 ];
 
-function getPeriodStart(periodKey, trackingStartDate) {
-  const now = new Date();
-  switch (periodKey) {
-    case 'week': {
-      const d = new Date(now);
-      const day = d.getDay();
-      d.setDate(d.getDate() - day);
-      d.setHours(0, 0, 0, 0);
-      return d;
-    }
-    case 'month':
-      return new Date(now.getFullYear(), now.getMonth(), 1);
-    case 'quarter': {
-      const qMonth = Math.floor(now.getMonth() / 3) * 3;
-      return new Date(now.getFullYear(), qMonth, 1);
-    }
-    case 'year':
-      return new Date(now.getFullYear(), 0, 1);
-    case 'all':
-      return trackingStartDate ? new Date(trackingStartDate + 'T00:00:00') : new Date(now.getFullYear(), 0, 1);
-    default:
-      return new Date(now.getFullYear(), 0, 1);
-  }
-}
-
-function computePeriodStats(logs, periodKey, trackingStartDate, habitType) {
-  const start = getPeriodStart(periodKey, trackingStartDate);
+function computePeriodStats(logs, periodKey, trackingStartDate) {
   const now = new Date();
   now.setHours(23, 59, 59, 999);
+
+  let start;
+  const periodDef = PERIODS.find((p) => p.key === periodKey);
+
+  if (periodDef.days) {
+    start = new Date();
+    start.setDate(start.getDate() - periodDef.days);
+    start.setHours(0, 0, 0, 0);
+  } else {
+    start = trackingStartDate
+      ? new Date(`${trackingStartDate}T00:00:00`)
+      : new Date(now.getFullYear(), 0, 1);
+  }
 
   const periodLogs = logs.filter((l) => {
     const d = new Date(l.timestamp);
@@ -134,19 +102,14 @@ function computePeriodStats(logs, periodKey, trackingStartDate, habitType) {
 
   const uniqueDays = new Set(periodLogs.map((l) => l.timestamp.split('T')[0]));
   const totalDays = daysBetween(start, new Date()) + 1;
+  const percentage = totalDays > 0 ? Math.round((uniqueDays.size / totalDays) * 100) : 0;
 
-  const stats = {
+  return {
     daysLogged: uniqueDays.size,
     totalDays,
+    percentage,
+    entries: periodLogs.length,
   };
-
-  if (habitType === 'timed') {
-    const totalMinutes = periodLogs.reduce((sum, l) => sum + (typeof l.value === 'number' ? l.value : 0), 0);
-    stats.totalMinutes = totalMinutes;
-    stats.entries = periodLogs.length;
-  }
-
-  return stats;
 }
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -170,17 +133,13 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [editModal, setEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', type: 'once_per_day' });
-  const [chipInput, setChipInput] = useState('');
+  const [editForm, setEditForm] = useState({ name: '', type: 'daily' });
 
+  const isDaily = habit.type !== 'irregular';
   const streak = computeStreak(logs);
-  const stats = computePeriodStats(logs, period, habit.tracking_start_date, habit.type);
+  const stats = computePeriodStats(logs, period, habit.tracking_start_date);
 
-  // Calendar log lookup
-  const loggedDays = new Set(
-    logs.map((l) => l.timestamp.split('T')[0]),
-  );
-
+  const loggedDays = new Set(logs.map((l) => l.timestamp.split('T')[0]));
   const calendarDays = getCalendarDays(calYear, calMonth);
   const today = todayStr();
 
@@ -207,70 +166,20 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
     year: 'numeric',
   });
 
-  // ─── Edit Modal ────────────────────────────────────────────────────────────
-
   function openEditModal() {
-    setEditForm({
-      name: habit.name,
-      type: habit.type,
-      quick_select_options: [...habit.quick_select_options],
-    });
-    setChipInput('');
+    setEditForm({ name: habit.name, type: habit.type || 'daily' });
     setEditModal(true);
   }
 
   function handleEditSave() {
     const trimmedName = editForm.name.trim();
     if (!trimmedName) return;
-    onUpdate({
-      ...habit,
-      name: trimmedName,
-      type: editForm.type,
-      quick_select_options: editForm.type === 'timed' ? editForm.quick_select_options : [],
-    });
+    onUpdate({ ...habit, name: trimmedName, type: editForm.type });
     setEditModal(false);
-  }
-
-  function addChip() {
-    const val = parseInt(chipInput, 10);
-    if (!val || val <= 0) return;
-    if (editForm.quick_select_options.includes(val)) return;
-    setEditForm((f) => ({
-      ...f,
-      quick_select_options: [...f.quick_select_options, val].sort((a, b) => a - b),
-    }));
-    setChipInput('');
-  }
-
-  function removeChip(minutes) {
-    setEditForm((f) => ({
-      ...f,
-      quick_select_options: f.quick_select_options.filter((v) => v !== minutes),
-    }));
   }
 
   function handleEditBackdropClick(e) {
     if (e.target === e.currentTarget) setEditModal(false);
-  }
-
-  // ─── Quick Select Config (inline) ──────────────────────────────────────────
-
-  function addQuickSelectOption() {
-    const val = parseInt(chipInput, 10);
-    if (!val || val <= 0) return;
-    if (habit.quick_select_options.includes(val)) return;
-    onUpdate({
-      ...habit,
-      quick_select_options: [...habit.quick_select_options, val].sort((a, b) => a - b),
-    });
-    setChipInput('');
-  }
-
-  function removeQuickSelectOption(minutes) {
-    onUpdate({
-      ...habit,
-      quick_select_options: habit.quick_select_options.filter((v) => v !== minutes),
-    });
   }
 
   return (
@@ -282,12 +191,10 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
         <DetailTitle>{habit.name}</DetailTitle>
         <DetailMeta>
           <TypeBadge $type={habit.type}>
-            {habit.type === 'timed' ? 'timed' : habit.type === 'irregular' ? 'irregular' : 'daily'}
+            {isDaily ? 'daily' : 'irregular'}
           </TypeBadge>
-          {streak > 0 && (
-            <StreakBadge>
-              &#128293; {streak} day streak
-            </StreakBadge>
+          {isDaily && streak > 0 && (
+            <StreakBadge>&#128293; {streak} day streak</StreakBadge>
           )}
           {habit.tracking_start_date && (
             <span>Since {habit.tracking_start_date}</span>
@@ -316,65 +223,29 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
           ))}
         </PeriodSelector>
 
+        {isDaily && (
+          <StatRow>
+            <StatLabel>Completion Rate</StatLabel>
+            <StatValue>{stats.percentage}%</StatValue>
+          </StatRow>
+        )}
         <StatRow>
           <StatLabel>Days Logged</StatLabel>
           <StatValue>{stats.daysLogged} / {stats.totalDays} days</StatValue>
         </StatRow>
-        <StatRow>
-          <StatLabel>Completion Rate</StatLabel>
-          <StatValue>
-            {stats.totalDays > 0
-              ? Math.round((stats.daysLogged / stats.totalDays) * 100)
-              : 0}%
-          </StatValue>
-        </StatRow>
-        <StatRow>
-          <StatLabel>Current Streak</StatLabel>
-          <StatValue>{streak} day{streak !== 1 ? 's' : ''}</StatValue>
-        </StatRow>
-        {habit.type === 'timed' && (
-          <>
-            <StatRow>
-              <StatLabel>Total Time</StatLabel>
-              <StatValue>{formatDuration(stats.totalMinutes || 0)}</StatValue>
-            </StatRow>
-            <StatRow>
-              <StatLabel>Total Entries</StatLabel>
-              <StatValue>{stats.entries || 0}</StatValue>
-            </StatRow>
-          </>
+        {isDaily && (
+          <StatRow>
+            <StatLabel>Current Streak</StatLabel>
+            <StatValue>{streak} day{streak !== 1 ? 's' : ''}</StatValue>
+          </StatRow>
+        )}
+        {!isDaily && (
+          <StatRow>
+            <StatLabel>Total Entries</StatLabel>
+            <StatValue>{stats.entries}</StatValue>
+          </StatRow>
         )}
       </StatsSection>
-
-      {/* ─── Quick Select Config (timed habits) ──────────────────────────── */}
-      {habit.type === 'timed' && (
-        <ConfigSection>
-          <SectionTitle>Quick Select Options</SectionTitle>
-          <QuickSelectChips>
-            {habit.quick_select_options.map((mins) => (
-              <QuickSelectChip key={mins}>
-                {formatDuration(mins)}
-                <ChipRemove type="button" onClick={() => removeQuickSelectOption(mins)}>
-                  &#215;
-                </ChipRemove>
-              </QuickSelectChip>
-            ))}
-            {habit.quick_select_options.length === 0 && (
-              <span style={{ fontSize: 13, color: '#999' }}>No options configured</span>
-            )}
-          </QuickSelectChips>
-          <AddChipRow>
-            <SmallInput
-              type="number"
-              placeholder="Minutes"
-              value={chipInput}
-              onChange={(e) => setChipInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') addQuickSelectOption(); }}
-            />
-            <SmallButton type="button" onClick={addQuickSelectOption}>Add</SmallButton>
-          </AddChipRow>
-        </ConfigSection>
-      )}
 
       {/* ─── Calendar ─────────────────────────────────────────────────────── */}
       <CalendarSection>
@@ -425,21 +296,14 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
               onKeyDown={(e) => { if (e.key === 'Enter') handleEditSave(); }}
             />
 
-            <Label>Type</Label>
+            <Label>Frequency</Label>
             <TypeSelector>
               <TypeOption
                 type="button"
-                $active={editForm.type === 'once_per_day'}
-                onClick={() => setEditForm((f) => ({ ...f, type: 'once_per_day' }))}
+                $active={editForm.type === 'daily'}
+                onClick={() => setEditForm((f) => ({ ...f, type: 'daily' }))}
               >
                 Daily
-              </TypeOption>
-              <TypeOption
-                type="button"
-                $active={editForm.type === 'timed'}
-                onClick={() => setEditForm((f) => ({ ...f, type: 'timed' }))}
-              >
-                Timed
               </TypeOption>
               <TypeOption
                 type="button"
@@ -449,32 +313,6 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
                 Irregular
               </TypeOption>
             </TypeSelector>
-
-            {editForm.type === 'timed' && (
-              <>
-                <Label>Quick Select Durations (minutes)</Label>
-                <QuickSelectChips>
-                  {editForm.quick_select_options.map((mins) => (
-                    <QuickSelectChip key={mins}>
-                      {formatDuration(mins)}
-                      <ChipRemove type="button" onClick={() => removeChip(mins)}>
-                        &#215;
-                      </ChipRemove>
-                    </QuickSelectChip>
-                  ))}
-                </QuickSelectChips>
-                <AddChipRow>
-                  <SmallInput
-                    type="number"
-                    placeholder="Minutes"
-                    value={chipInput}
-                    onChange={(e) => setChipInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') addChip(); }}
-                  />
-                  <SmallButton type="button" onClick={addChip}>Add</SmallButton>
-                </AddChipRow>
-              </>
-            )}
 
             <ModalActions>
               <SaveButton onClick={handleEditSave} disabled={!editForm.name.trim()}>

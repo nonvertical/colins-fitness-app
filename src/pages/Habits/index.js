@@ -18,6 +18,7 @@ import {
   TypeBadge,
   DoneIndicator,
   QuickAddButton,
+  ActiveToggle,
   EmptyState,
   ModalBackdrop,
   ModalSheet,
@@ -27,17 +28,9 @@ import {
   TextInput,
   TypeSelector,
   TypeOption,
-  QuickSelectChips,
-  QuickSelectChip,
-  ChipRemove,
-  AddChipRow,
-  SmallInput,
-  SmallButton,
   ModalActions,
   SaveButton,
   DeleteButton,
-  DurationGrid,
-  DurationButton,
 } from './styles';
 
 function generateId() {
@@ -46,11 +39,6 @@ function generateId() {
 
 function todayStr() {
   return new Date().toISOString().split('T')[0];
-}
-
-function getStartOfYear() {
-  const d = new Date();
-  return new Date(d.getFullYear(), 0, 1);
 }
 
 function daysBetween(dateA, dateB) {
@@ -72,10 +60,9 @@ function computeStreak(logs, habitId) {
   const today = todayStr();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayDate = yesterday.toISOString().split('T')[0];
 
-  // Streak must include today or yesterday
-  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterdayStr) return 0;
+  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterdayDate) return 0;
 
   let streak = 1;
   for (let i = 1; i < uniqueDays.length; i += 1) {
@@ -89,14 +76,17 @@ function computeStreak(logs, habitId) {
   return streak;
 }
 
-function computeYearTotal(logs, habitId) {
-  const yearStart = getStartOfYear();
+function computePercentage(logs, habitId, daysBack) {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - daysBack);
+  start.setHours(0, 0, 0, 0);
+
   const habitLogs = logs
-    .filter((l) => l.habit_id === habitId && new Date(l.timestamp) >= yearStart)
+    .filter((l) => l.habit_id === habitId && new Date(l.timestamp) >= start)
     .map((l) => l.timestamp.split('T')[0]);
   const uniqueDays = new Set(habitLogs);
-  const totalDaysThisYear = daysBetween(yearStart, new Date()) + 1;
-  return { done: uniqueDays.size, total: totalDaysThisYear };
+  return Math.round((uniqueDays.size / daysBack) * 100);
 }
 
 function isDoneToday(logs, habitId) {
@@ -104,20 +94,14 @@ function isDoneToday(logs, habitId) {
   return logs.some((l) => l.habit_id === habitId && l.timestamp.startsWith(today));
 }
 
-function formatDuration(minutes) {
-  if (minutes >= 60) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    if (m === 0) return `${h}h`;
-    return `${h}h ${m}m`;
-  }
-  return `${minutes}m`;
+function todayCount(logs, habitId) {
+  const today = todayStr();
+  return logs.filter((l) => l.habit_id === habitId && l.timestamp.startsWith(today)).length;
 }
 
 const EMPTY_FORM = {
   name: '',
-  type: 'once_per_day',
-  quick_select_options: [],
+  type: 'daily',
 };
 
 export default function Habits() {
@@ -125,8 +109,6 @@ export default function Habits() {
   const [habitLogs, setHabitLogs] = useLocalStorage('habit_logs', []);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [durationModal, setDurationModal] = useState(null);
-  const [chipInput, setChipInput] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const nameInputRef = useRef(null);
 
@@ -142,7 +124,6 @@ export default function Habits() {
 
   function openAdd() {
     setForm(EMPTY_FORM);
-    setChipInput('');
     setModal({ mode: 'add' });
   }
 
@@ -161,19 +142,14 @@ export default function Habits() {
           id: generateId(),
           name: trimmedName,
           type: form.type,
-          quick_select_options: form.type === 'timed' ? form.quick_select_options : [],
+          active: true,
           tracking_start_date: todayStr(),
         },
       ]);
     } else {
       setHabits((prev) => prev.map((h) => (
         h.id === modal.habit.id
-          ? {
-            ...h,
-            name: trimmedName,
-            type: form.type,
-            quick_select_options: form.type === 'timed' ? form.quick_select_options : [],
-          }
+          ? { ...h, name: trimmedName, type: form.type }
           : h
       )));
     }
@@ -190,39 +166,23 @@ export default function Habits() {
     if (e.target === e.currentTarget) closeModal();
   }
 
-  // ─── Quick Select Options ──────────────────────────────────────────────────
+  // ─── Active Toggle ────────────────────────────────────────────────────────
 
-  function addChip() {
-    const val = parseInt(chipInput, 10);
-    if (!val || val <= 0) return;
-    if (form.quick_select_options.includes(val)) return;
-    setForm((f) => ({
-      ...f,
-      quick_select_options: [...f.quick_select_options, val].sort((a, b) => a - b),
-    }));
-    setChipInput('');
-  }
-
-  function removeChip(minutes) {
-    setForm((f) => ({
-      ...f,
-      quick_select_options: f.quick_select_options.filter((v) => v !== minutes),
-    }));
+  function toggleActive(habitId, e) {
+    e.stopPropagation();
+    setHabits((prev) => prev.map((h) => (
+      h.id === habitId ? { ...h, active: !h.active } : h
+    )));
   }
 
   // ─── Logging ───────────────────────────────────────────────────────────────
 
-  function logOncePerDay(habitId, e) {
+  function logDaily(habitId, e) {
     e.stopPropagation();
     if (isDoneToday(habitLogs, habitId)) return;
     setHabitLogs((prev) => [
       ...prev,
-      {
-        id: generateId(),
-        habit_id: habitId,
-        timestamp: new Date().toISOString(),
-        value: true,
-      },
+      { id: generateId(), habit_id: habitId, timestamp: new Date().toISOString(), value: true },
     ]);
   }
 
@@ -230,35 +190,8 @@ export default function Habits() {
     e.stopPropagation();
     setHabitLogs((prev) => [
       ...prev,
-      {
-        id: generateId(),
-        habit_id: habitId,
-        timestamp: new Date().toISOString(),
-        value: true,
-      },
+      { id: generateId(), habit_id: habitId, timestamp: new Date().toISOString(), value: true },
     ]);
-  }
-
-  function openDurationModal(habit, e) {
-    e.stopPropagation();
-    setDurationModal(habit);
-  }
-
-  function logDuration(minutes) {
-    setHabitLogs((prev) => [
-      ...prev,
-      {
-        id: generateId(),
-        habit_id: durationModal.id,
-        timestamp: new Date().toISOString(),
-        value: minutes,
-      },
-    ]);
-    setDurationModal(null);
-  }
-
-  function handleDurationBackdropClick(e) {
-    if (e.target === e.currentTarget) setDurationModal(null);
   }
 
   // ─── Detail View ───────────────────────────────────────────────────────────
@@ -287,6 +220,9 @@ export default function Habits() {
 
   // ─── List View ─────────────────────────────────────────────────────────────
 
+  const activeHabits = habits.filter((h) => h.active !== false);
+  const inactiveHabits = habits.filter((h) => h.active === false);
+
   return (
     <Page>
       <Header>
@@ -309,49 +245,77 @@ export default function Habits() {
             </span>
           </EmptyState>
         ) : (
-          habits.map((habit) => {
-            const streak = computeStreak(habitLogs, habit.id);
-            const yearTotal = computeYearTotal(habitLogs, habit.id);
-            const doneToday = isDoneToday(habitLogs, habit.id);
-            const currentYear = new Date().getFullYear();
+          <>
+            {activeHabits.map((habit) => {
+              const isDaily = habit.type !== 'irregular';
+              const streak = computeStreak(habitLogs, habit.id);
+              const pct7 = isDaily ? computePercentage(habitLogs, habit.id, 7) : 0;
+              const doneToday = isDoneToday(habitLogs, habit.id);
+              const count = todayCount(habitLogs, habit.id);
 
-            return (
-              <HabitRow key={habit.id} onClick={() => setSelectedId(habit.id)}>
-                <HabitInfo>
-                  <HabitName>{habit.name}</HabitName>
-                  <HabitMeta>
-                    {streak > 0 && (
-                      <StreakBadge>
-                        &#128293; {streak}d
-                      </StreakBadge>
-                    )}
-                    <span>{yearTotal.done}/{yearTotal.total} days in {currentYear}</span>
-                  </HabitMeta>
-                </HabitInfo>
-                <TypeBadge $type={habit.type}>
-                  {habit.type === 'timed' ? 'timed' : habit.type === 'irregular' ? 'irregular' : 'daily'}
-                </TypeBadge>
-                {habit.type === 'once_per_day' && doneToday ? (
-                  <DoneIndicator>&#10003;</DoneIndicator>
-                ) : (
-                  <QuickAddButton
+              return (
+                <HabitRow key={habit.id} onClick={() => setSelectedId(habit.id)}>
+                  <HabitInfo>
+                    <HabitName>{habit.name}</HabitName>
+                    <HabitMeta>
+                      {isDaily && streak > 0 && (
+                        <StreakBadge>&#128293; {streak}d</StreakBadge>
+                      )}
+                      {isDaily && <span>{pct7}% (7d)</span>}
+                      {!isDaily && count > 0 && <span>{count}x today</span>}
+                    </HabitMeta>
+                  </HabitInfo>
+                  <TypeBadge $type={habit.type}>
+                    {isDaily ? 'daily' : 'irregular'}
+                  </TypeBadge>
+                  <ActiveToggle
                     type="button"
-                    onClick={(e) => {
-                      if (habit.type === 'once_per_day') {
-                        logOncePerDay(habit.id, e);
-                      } else if (habit.type === 'timed') {
-                        openDurationModal(habit, e);
-                      } else {
-                        logIrregular(habit.id, e);
-                      }
-                    }}
-                  >
-                    +
-                  </QuickAddButton>
-                )}
-              </HabitRow>
-            );
-          })
+                    $active
+                    onClick={(e) => toggleActive(habit.id, e)}
+                    title="Active — shown on home"
+                  />
+                  {isDaily && doneToday ? (
+                    <DoneIndicator>&#10003;</DoneIndicator>
+                  ) : (
+                    <QuickAddButton
+                      type="button"
+                      onClick={(e) => (isDaily ? logDaily(habit.id, e) : logIrregular(habit.id, e))}
+                    >
+                      +
+                    </QuickAddButton>
+                  )}
+                </HabitRow>
+              );
+            })}
+
+            {inactiveHabits.length > 0 && (
+              <>
+                <div style={{ padding: '16px 20px 8px', fontSize: 12, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Inactive
+                </div>
+                {inactiveHabits.map((habit) => {
+                  const isDaily = habit.type !== 'irregular';
+
+                  return (
+                    <HabitRow key={habit.id} $inactive onClick={() => setSelectedId(habit.id)}>
+                      <HabitInfo>
+                        <HabitName style={{ opacity: 0.5 }}>{habit.name}</HabitName>
+                      </HabitInfo>
+                      <TypeBadge $type={habit.type} style={{ opacity: 0.5 }}>
+                        {isDaily ? 'daily' : 'irregular'}
+                      </TypeBadge>
+                      <ActiveToggle
+                        type="button"
+                        $active={false}
+                        onClick={(e) => toggleActive(habit.id, e)}
+                        title="Inactive — not shown on home"
+                      />
+                    </HabitRow>
+                  );
+                })}
+              </>
+            )}
+          </>
         )}
       </List>
 
@@ -374,21 +338,14 @@ export default function Habits() {
               onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
             />
 
-            <Label>Type</Label>
+            <Label>Frequency</Label>
             <TypeSelector>
               <TypeOption
                 type="button"
-                $active={form.type === 'once_per_day'}
-                onClick={() => setForm((f) => ({ ...f, type: 'once_per_day' }))}
+                $active={form.type === 'daily'}
+                onClick={() => setForm((f) => ({ ...f, type: 'daily' }))}
               >
                 Daily
-              </TypeOption>
-              <TypeOption
-                type="button"
-                $active={form.type === 'timed'}
-                onClick={() => setForm((f) => ({ ...f, type: 'timed' }))}
-              >
-                Timed
               </TypeOption>
               <TypeOption
                 type="button"
@@ -398,32 +355,6 @@ export default function Habits() {
                 Irregular
               </TypeOption>
             </TypeSelector>
-
-            {form.type === 'timed' && (
-              <>
-                <Label>Quick Select Durations (minutes)</Label>
-                <QuickSelectChips>
-                  {form.quick_select_options.map((mins) => (
-                    <QuickSelectChip key={mins}>
-                      {formatDuration(mins)}
-                      <ChipRemove type="button" onClick={() => removeChip(mins)}>
-                        &#215;
-                      </ChipRemove>
-                    </QuickSelectChip>
-                  ))}
-                </QuickSelectChips>
-                <AddChipRow>
-                  <SmallInput
-                    type="number"
-                    placeholder="Minutes"
-                    value={chipInput}
-                    onChange={(e) => setChipInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') addChip(); }}
-                  />
-                  <SmallButton type="button" onClick={addChip}>Add</SmallButton>
-                </AddChipRow>
-              </>
-            )}
 
             <ModalActions>
               {modal.mode === 'edit' && (
@@ -435,34 +366,6 @@ export default function Habits() {
                 {modal.mode === 'add' ? 'Add Habit' : 'Save Changes'}
               </SaveButton>
             </ModalActions>
-          </ModalSheet>
-        </ModalBackdrop>
-      )}
-
-      {/* ─── Duration Quick Select Modal ─────────────────────────────────────── */}
-      {durationModal && (
-        <ModalBackdrop onClick={handleDurationBackdropClick}>
-          <ModalSheet>
-            <ModalHandle />
-            <ModalTitle>Log Duration</ModalTitle>
-            {durationModal.quick_select_options.length > 0 ? (
-              <DurationGrid>
-                {durationModal.quick_select_options.map((mins) => (
-                  <DurationButton
-                    key={mins}
-                    type="button"
-                    onClick={() => logDuration(mins)}
-                  >
-                    {formatDuration(mins)}
-                  </DurationButton>
-                ))}
-              </DurationGrid>
-            ) : (
-              <EmptyState style={{ padding: '24px 0' }}>
-                <span style={{ fontSize: 15 }}>No quick select options configured</span>
-                <span style={{ fontSize: 13 }}>Edit this habit to add duration options</span>
-              </EmptyState>
-            )}
           </ModalSheet>
         </ModalBackdrop>
       )}

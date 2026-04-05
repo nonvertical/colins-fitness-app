@@ -4,6 +4,26 @@ All design and functionality changes to the application, in reverse chronologica
 
 ---
 
+## 2026-04-05 — Habits Redesign, Widget Home Page
+
+### Habits Redesign
+- Simplified to **two types only**: **Daily** and **Irregular** (removed timed/once_per_day)
+- Daily habits track completion percentage over 7 days, 30 days, 90 days, or since started
+- Irregular habits can be logged multiple times per day with no daily expectation
+- Active/inactive toggle on each habit — active habits appear on the home page
+- Habit detail view shows completion rate, days logged, current streak (daily), total entries (irregular), and calendar
+- Removed all timed/duration-related functionality (quick select durations, total time stats)
+
+### Widget Home Page
+- Home page redesigned as modular widgets (like iPhone widgets)
+- Training widget: week view with workout dots, tap day to see workouts
+- Habits widget: active habits with streak, 7-day percentage (daily) or today count (irregular), quick-log
+- Health widget: weight, body fat, PRs summary
+- Each widget has a subtle glowing border effect
+- Quick action buttons: + Workout, + Habit
+
+---
+
 ## 2026-04-05 — Create Exercises from Workouts, Irregular Habits
 
 - When searching for an exercise in a workout block, if no match exists you can now create it inline (adds to exercise library with default unit type "reps")
