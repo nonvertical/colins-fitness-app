@@ -77,7 +77,7 @@ export const List = styled.div`
   padding: 8px 0;
 `;
 
-export const HabitRow = styled.button`
+export const HabitRow = styled.div`
   display: flex;
   align-items: center;
   width: 100%;

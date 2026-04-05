@@ -4,7 +4,24 @@ All design and functionality changes to the application, in reverse chronologica
 
 ---
 
-## 2026-04-05 — Habits Page
+## 2026-04-05 — Home Page, Habits Page, Health Profile
+
+### Home Page
+- Week view showing Sun–Sat with today highlighted
+- Workout dots on each day (color-coded by status: green=finished, orange=started, red=overdue, grey=scheduled)
+- Tap a day to see its workouts
+- Habits strip showing up to 3 habits with streak and year total
+- Quick-log habits directly from home (once-per-day tap, timed duration modal)
+- Quick action buttons: + Workout, + Habit (navigate to respective pages)
+
+### Health Profile
+- Body Stats: weight (lbs/kg toggle) and body fat %
+- Goals: add/remove text goals
+- PRs: add/edit/delete with exercise name, value, notes, and date
+- Custom Metrics: add with name, unit type (number/time/text/lbs/kg), and entries over time
+- All data persisted to localStorage
+
+### Habits Page
 
 - Habit list with streak (fire icon) and running total (e.g., "23/45 days in 2026")
 - Two habit types: timed (multi-entry per day) and once-per-day (single tap to record)
