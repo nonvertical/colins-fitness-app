@@ -4,6 +4,24 @@ All design and functionality changes to the application, in reverse chronologica
 
 ---
 
+## 2026-04-05 — Habits Page
+
+- Habit list with streak (fire icon) and running total (e.g., "23/45 days in 2026")
+- Two habit types: timed (multi-entry per day) and once-per-day (single tap to record)
+- Once-per-day: tap + to record, shows checkmark when done for today
+- Timed: tap +, modal with configurable quick-select durations (3 clicks total per PRD)
+- Add/delete habits with name, type, and duration options
+- Habit detail view with:
+  - Tracking stats by period (this week, month, quarter, year, since started)
+  - Completion rate and current streak
+  - Timed habits also show total time and entry count
+  - Quick-select option management (add/remove durations)
+  - Calendar view with month navigation, logged days highlighted
+- Edit habit from detail view
+- All data persisted to localStorage (habits + habit_logs)
+
+---
+
 ## 2026-03-24 — Workout Default Name
 
 - New workout name field auto-populates with "New Workout {date}" (e.g., "New Workout Mar 24, 2026")
