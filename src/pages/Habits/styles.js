@@ -148,8 +148,16 @@ export const TypeBadge = styled.span`
   font-weight: 600;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: ${({ $type }) => ($type === 'timed' ? colors.unit.time : colors.auxiliar.success)};
-  background: ${({ $type }) => ($type === 'timed' ? `${colors.unit.time}22` : `${colors.auxiliar.success}22`)};
+  color: ${({ $type }) => {
+    if ($type === 'timed') return colors.unit.time;
+    if ($type === 'irregular') return colors.auxiliar.info;
+    return colors.auxiliar.success;
+  }};
+  background: ${({ $type }) => {
+    if ($type === 'timed') return `${colors.unit.time}22`;
+    if ($type === 'irregular') return `${colors.auxiliar.info}22`;
+    return `${colors.auxiliar.success}22`;
+  }};
 `;
 
 export const DoneIndicator = styled.span`

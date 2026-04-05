@@ -156,7 +156,7 @@ function AddSetForm({ unitType, onSave }) {
 
 // ─── Add Exercise Search ─────────────────────────────────────────────────────
 
-function AddExerciseSearch({ exercises, onSelect, onClose }) {
+function AddExerciseSearch({ exercises, onSelect, onCreate, onClose }) {
   const [query, setQuery] = useState('');
   const inputRef = useRef(null);
 
@@ -168,17 +168,21 @@ function AddExerciseSearch({ exercises, onSelect, onClose }) {
     (e) => e.name.toLowerCase().includes(query.toLowerCase()),
   );
 
+  const exactMatch = query && exercises.some(
+    (e) => e.name.toLowerCase() === query.toLowerCase(),
+  );
+
   return (
     <AddExerciseRow>
       <ExerciseSearchInput
         ref={inputRef}
         type="text"
-        placeholder="Search exercises to add…"
+        placeholder="Search or create exercise…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
       />
-      {query && filtered.length > 0 && (
+      {query && (
         <ExerciseDropdown>
           {filtered.slice(0, 8).map((ex) => (
             <ExerciseDropdownItem key={ex.id} onClick={() => onSelect(ex)}>
@@ -186,12 +190,12 @@ function AddExerciseSearch({ exercises, onSelect, onClose }) {
               <ExerciseUnitBadge $type={ex.unit_type}>{ex.unit_type}</ExerciseUnitBadge>
             </ExerciseDropdownItem>
           ))}
+          {!exactMatch && (
+            <ExerciseDropdownItem onClick={() => onCreate(query.trim())}>
+              + Create "{query.trim()}"
+            </ExerciseDropdownItem>
+          )}
         </ExerciseDropdown>
-      )}
-      {query && filtered.length === 0 && (
-        <div style={{ padding: '10px 0', fontSize: 13, color: '#999' }}>
-          No exercises found — add exercises in the Exercises page first
-        </div>
       )}
     </AddExerciseRow>
   );
@@ -199,7 +203,7 @@ function AddExerciseSearch({ exercises, onSelect, onClose }) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function WorkoutDetail({ workout, exercises, onUpdate, onBack, onDelete }) {
+export default function WorkoutDetail({ workout, exercises, onUpdate, onBack, onDelete, onCreateExercise }) {
   const [addingExerciseTo, setAddingExerciseTo] = useState(null);
   const [addingSetTo, setAddingSetTo] = useState(null);
 
@@ -359,6 +363,10 @@ export default function WorkoutDetail({ workout, exercises, onUpdate, onBack, on
               <AddExerciseSearch
                 exercises={exercises}
                 onSelect={(ex) => handleAddExercise(block.id, ex)}
+                onCreate={(name) => {
+                  const newEx = onCreateExercise(name);
+                  handleAddExercise(block.id, newEx);
+                }}
                 onClose={() => setAddingExerciseTo(null)}
               />
             )}

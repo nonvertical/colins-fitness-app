@@ -282,7 +282,7 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
         <DetailTitle>{habit.name}</DetailTitle>
         <DetailMeta>
           <TypeBadge $type={habit.type}>
-            {habit.type === 'timed' ? 'timed' : 'daily'}
+            {habit.type === 'timed' ? 'timed' : habit.type === 'irregular' ? 'irregular' : 'daily'}
           </TypeBadge>
           {streak > 0 && (
             <StreakBadge>
@@ -432,7 +432,7 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
                 $active={editForm.type === 'once_per_day'}
                 onClick={() => setEditForm((f) => ({ ...f, type: 'once_per_day' }))}
               >
-                Once Per Day
+                Daily
               </TypeOption>
               <TypeOption
                 type="button"
@@ -440,6 +440,13 @@ export default function HabitDetail({ habit, logs, onUpdate, onDelete, onBack })
                 onClick={() => setEditForm((f) => ({ ...f, type: 'timed' }))}
               >
                 Timed
+              </TypeOption>
+              <TypeOption
+                type="button"
+                $active={editForm.type === 'irregular'}
+                onClick={() => setEditForm((f) => ({ ...f, type: 'irregular' }))}
+              >
+                Irregular
               </TypeOption>
             </TypeSelector>
 

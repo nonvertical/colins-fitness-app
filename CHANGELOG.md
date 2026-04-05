@@ -4,6 +4,15 @@ All design and functionality changes to the application, in reverse chronologica
 
 ---
 
+## 2026-04-05 — Create Exercises from Workouts, Irregular Habits
+
+- When searching for an exercise in a workout block, if no match exists you can now create it inline (adds to exercise library with default unit type "reps")
+- Habits now support three types: **Daily** (once per day), **Timed** (with duration quick-select), and **Irregular** (log anytime, no daily expectation)
+- Irregular habits get a blue badge and can be logged multiple times without a "done for today" cap
+- Default exercise library is empty — all exercises come from the user
+
+---
+
 ## 2026-04-05 — Home Page, Habits Page, Health Profile
 
 ### Home Page

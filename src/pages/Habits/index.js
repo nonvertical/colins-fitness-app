@@ -226,6 +226,19 @@ export default function Habits() {
     ]);
   }
 
+  function logIrregular(habitId, e) {
+    e.stopPropagation();
+    setHabitLogs((prev) => [
+      ...prev,
+      {
+        id: generateId(),
+        habit_id: habitId,
+        timestamp: new Date().toISOString(),
+        value: true,
+      },
+    ]);
+  }
+
   function openDurationModal(habit, e) {
     e.stopPropagation();
     setDurationModal(habit);
@@ -316,18 +329,22 @@ export default function Habits() {
                   </HabitMeta>
                 </HabitInfo>
                 <TypeBadge $type={habit.type}>
-                  {habit.type === 'timed' ? 'timed' : 'daily'}
+                  {habit.type === 'timed' ? 'timed' : habit.type === 'irregular' ? 'irregular' : 'daily'}
                 </TypeBadge>
                 {habit.type === 'once_per_day' && doneToday ? (
                   <DoneIndicator>&#10003;</DoneIndicator>
                 ) : (
                   <QuickAddButton
                     type="button"
-                    onClick={(e) => (
-                      habit.type === 'once_per_day'
-                        ? logOncePerDay(habit.id, e)
-                        : openDurationModal(habit, e)
-                    )}
+                    onClick={(e) => {
+                      if (habit.type === 'once_per_day') {
+                        logOncePerDay(habit.id, e);
+                      } else if (habit.type === 'timed') {
+                        openDurationModal(habit, e);
+                      } else {
+                        logIrregular(habit.id, e);
+                      }
+                    }}
                   >
                     +
                   </QuickAddButton>
@@ -364,7 +381,7 @@ export default function Habits() {
                 $active={form.type === 'once_per_day'}
                 onClick={() => setForm((f) => ({ ...f, type: 'once_per_day' }))}
               >
-                Once Per Day
+                Daily
               </TypeOption>
               <TypeOption
                 type="button"
@@ -372,6 +389,13 @@ export default function Habits() {
                 onClick={() => setForm((f) => ({ ...f, type: 'timed' }))}
               >
                 Timed
+              </TypeOption>
+              <TypeOption
+                type="button"
+                $active={form.type === 'irregular'}
+                onClick={() => setForm((f) => ({ ...f, type: 'irregular' }))}
+              >
+                Irregular
               </TypeOption>
             </TypeSelector>
 

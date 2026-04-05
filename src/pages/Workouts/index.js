@@ -58,7 +58,7 @@ const EMPTY_FORM = {
 
 export default function Workouts() {
   const [workouts, setWorkouts] = useLocalStorage('workouts', []);
-  const [exercises] = useLocalStorage('exercises', []);
+  const [exercises, setExercises] = useLocalStorage('exercises', []);
   const [selectedId, setSelectedId] = useState(null);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -117,6 +117,17 @@ export default function Workouts() {
     setSelectedId(null);
   }
 
+  function handleCreateExercise(name) {
+    const newExercise = {
+      id: generateId(),
+      name,
+      unit_type: 'reps',
+      notes: '',
+    };
+    setExercises((prev) => [...prev, newExercise]);
+    return newExercise;
+  }
+
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget) setModal(false);
   }
@@ -131,6 +142,7 @@ export default function Workouts() {
         onUpdate={handleUpdate}
         onBack={() => setSelectedId(null)}
         onDelete={() => handleDelete(selected.id)}
+        onCreateExercise={handleCreateExercise}
       />
     );
   }
