@@ -37,6 +37,18 @@ import {
   HealthStatValue,
   QuickActions,
   QuickActionButton,
+  LogModalBackdrop,
+  LogModalSheet,
+  LogModalTitle,
+  LogChipGroup,
+  LogChip,
+  LogCustomRow,
+  LogInput,
+  LogInputLabel,
+  LogSectionLabel,
+  LogModalActions,
+  LogCancelButton,
+  LogSaveButton,
 } from './styles';
 
 function todayStr() {
@@ -130,6 +142,20 @@ function todayCount(logs, habitId) {
   return logs.filter((l) => l.habit_id === habitId && l.timestamp.startsWith(today)).length;
 }
 
+function formatDuration(seconds) {
+  if (seconds >= 3600) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  if (seconds >= 60) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  return `${seconds}s`;
+}
+
 const DEFAULT_PROFILE = {
   weight: null,
   weight_unit: 'lbs',
@@ -145,6 +171,7 @@ export default function Home() {
   const [habitLogs, setHabitLogs] = useLocalStorage('habit_logs', []);
   const [profile] = useLocalStorage('health_profile', DEFAULT_PROFILE);
   const [selectedDay, setSelectedDay] = useState(todayStr());
+  const [logModal, setLogModal] = useState(null); // { habit, selectedTime, selectedCount, customTime, customCount }
   const navigate = useNavigate();
 
   const weekDays = getWeekDays();
@@ -157,7 +184,6 @@ export default function Home() {
     year: 'numeric',
   });
 
-  // Active habits only
   const activeHabits = habits.filter((h) => h.active !== false);
 
   function workoutsForDay(dateStr) {
@@ -171,20 +197,54 @@ export default function Home() {
     day: 'numeric',
   });
 
-  // Habit logging
-  function logDaily(habitId) {
-    if (isDoneToday(habitLogs, habitId)) return;
+  function directLog(habit) {
+    const isDaily = habit.type !== 'irregular';
+    if (isDaily && isDoneToday(habitLogs, habit.id)) return;
     setHabitLogs((prev) => [
       ...prev,
-      { id: generateId(), habit_id: habitId, timestamp: new Date().toISOString(), value: true },
+      { id: generateId(), habit_id: habit.id, timestamp: new Date().toISOString(), value: true },
     ]);
   }
 
-  function logIrregular(habitId) {
-    setHabitLogs((prev) => [
-      ...prev,
-      { id: generateId(), habit_id: habitId, timestamp: new Date().toISOString(), value: true },
-    ]);
+  function openLogModal(habit) {
+    const hasTimed = habit.timed && habit.quick_time_options && habit.quick_time_options.length > 0;
+    const hasCounted = habit.counted && habit.quick_count_options && habit.quick_count_options.length > 0;
+
+    if (!hasTimed && !hasCounted) {
+      directLog(habit);
+      return;
+    }
+
+    setLogModal({
+      habit,
+      selectedTime: null,
+      selectedCount: null,
+      customTime: '',
+      customCount: '',
+    });
+  }
+
+  function submitLog() {
+    if (!logModal) return;
+    const { habit, selectedTime, selectedCount, customTime, customCount } = logModal;
+
+    const logEntry = {
+      id: generateId(),
+      habit_id: habit.id,
+      timestamp: new Date().toISOString(),
+      value: true,
+    };
+
+    // Attach time if selected
+    const timeVal = selectedTime || (customTime ? Number(customTime) * 60 : null);
+    if (timeVal) logEntry.duration = timeVal;
+
+    // Attach count if selected
+    const countVal = selectedCount || (customCount ? Number(customCount) : null);
+    if (countVal) logEntry.count = countVal;
+
+    setHabitLogs((prev) => [...prev, logEntry]);
+    setLogModal(null);
   }
 
   return (
@@ -268,7 +328,7 @@ export default function Home() {
                         <StreakBadge>&#128293; {streak}d</StreakBadge>
                       )}
                       {isDaily && (
-                        <PercentBadge $pct={pct7}>{pct7}% (7d)</PercentBadge>
+                        <PercentBadge>{pct7}% (7d)</PercentBadge>
                       )}
                       {!isDaily && count > 0 && (
                         <span>{count}x today</span>
@@ -280,7 +340,7 @@ export default function Home() {
                   ) : (
                     <HabitQuickButton
                       type="button"
-                      onClick={() => (isDaily ? logDaily(habit.id) : logIrregular(habit.id))}
+                      onClick={() => openLogModal(habit)}
                     >
                       +
                     </HabitQuickButton>
@@ -330,6 +390,80 @@ export default function Home() {
           + Habit
         </QuickActionButton>
       </QuickActions>
+
+      {/* ─── Log Modal ──────────────────────────────────────────────────── */}
+      {logModal && (
+        <LogModalBackdrop onClick={() => setLogModal(null)}>
+          <LogModalSheet onClick={(e) => e.stopPropagation()}>
+            <LogModalTitle>Log {logModal.habit.name}</LogModalTitle>
+
+            {logModal.habit.timed && logModal.habit.quick_time_options && logModal.habit.quick_time_options.length > 0 && (
+              <>
+                <LogSectionLabel>Duration</LogSectionLabel>
+                <LogChipGroup>
+                  {logModal.habit.quick_time_options.map((seconds) => (
+                    <LogChip
+                      key={seconds}
+                      $selected={logModal.selectedTime === seconds}
+                      onClick={() => setLogModal((m) => ({
+                        ...m,
+                        selectedTime: m.selectedTime === seconds ? null : seconds,
+                        customTime: '',
+                      }))}
+                    >
+                      {formatDuration(seconds)}
+                    </LogChip>
+                  ))}
+                </LogChipGroup>
+                <LogCustomRow>
+                  <LogInput
+                    type="number"
+                    placeholder="Custom"
+                    value={logModal.customTime}
+                    onChange={(e) => setLogModal((m) => ({ ...m, customTime: e.target.value, selectedTime: null }))}
+                  />
+                  <LogInputLabel>minutes</LogInputLabel>
+                </LogCustomRow>
+              </>
+            )}
+
+            {logModal.habit.counted && logModal.habit.quick_count_options && logModal.habit.quick_count_options.length > 0 && (
+              <>
+                <LogSectionLabel>Count</LogSectionLabel>
+                <LogChipGroup>
+                  {logModal.habit.quick_count_options.map((count) => (
+                    <LogChip
+                      key={count}
+                      $selected={logModal.selectedCount === count}
+                      onClick={() => setLogModal((m) => ({
+                        ...m,
+                        selectedCount: m.selectedCount === count ? null : count,
+                        customCount: '',
+                      }))}
+                    >
+                      {count}
+                    </LogChip>
+                  ))}
+                </LogChipGroup>
+                <LogCustomRow>
+                  <LogInput
+                    type="number"
+                    placeholder="Custom"
+                    value={logModal.customCount}
+                    onChange={(e) => setLogModal((m) => ({ ...m, customCount: e.target.value, selectedCount: null }))}
+                  />
+                  <LogInputLabel>count</LogInputLabel>
+                </LogCustomRow>
+              </>
+            )}
+
+            <LogModalActions>
+              <LogCancelButton onClick={() => setLogModal(null)}>Cancel</LogCancelButton>
+              <LogSaveButton onClick={submitLog}>Log</LogSaveButton>
+            </LogModalActions>
+          </LogModalSheet>
+        </LogModalBackdrop>
+      )}
     </Page>
   );
 }

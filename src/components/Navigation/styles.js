@@ -33,10 +33,10 @@ export const AppName = styled.div`
 `;
 
 export const AppNameText = styled.span`
-  font-family: 'Caveat', cursive;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 `;
 
 export const NavLink = styled(Link)`
