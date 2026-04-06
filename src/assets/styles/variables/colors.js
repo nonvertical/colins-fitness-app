@@ -1,14 +1,14 @@
 export default {
-  bgColor: '#110f10',
-  surface: '#1C1A1B',
-  surfaceElevated: '#252224',
-  border: '#2E2B2C',
-  borderSubtle: '#231F20',
+  bgColor: '#F7F7F8',
+  surface: '#FFFFFF',
+  surfaceElevated: '#F0F0F2',
+  border: '#E5E5E7',
+  borderSubtle: '#EFEFEF',
 
   primary: {
-    light: '#FF8F5E',
-    main: '#FF6B35',
-    dark: '#D44E1E',
+    light: '#FF4DA6',
+    main: '#E6007E',
+    dark: '#C20069',
   },
 
   secondary: {
@@ -21,14 +21,14 @@ export default {
     reps: '#4F8EF7',
     time: '#A855F7',
     distance: '#22C55E',
-    cals: '#FF6B35',
+    cals: '#E6007E',
   },
 
   auxiliar: {
     info: '#4F8EF7',
     success: '#22C55E',
     warning: '#FBBF24',
-    danger: '#F87171',
+    danger: '#EF4444',
   },
 
   text: {
@@ -38,9 +38,9 @@ export default {
       very: '#111',
     },
     light: {
-      little: '#555',
-      medium: '#999',
-      very: '#fff',
+      little: '#B0B0B5',
+      medium: '#6E6E73',
+      very: '#1D1D1F',
     },
   },
 };

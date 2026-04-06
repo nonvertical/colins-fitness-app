@@ -1,4 +1,4 @@
-import styled, { css, keyframes } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import colors from '../../assets/styles/variables/colors';
 import metrics from '../../assets/styles/variables/metrics';
 
@@ -195,7 +195,7 @@ const slideUp = keyframes`
 export const ModalBackdrop = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 300;
   animation: ${fadeIn} 200ms ease;
   display: flex;

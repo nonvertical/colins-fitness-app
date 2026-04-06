@@ -47,7 +47,7 @@ export const Widget = styled.section`
   border: 1px solid ${colors.border};
   border-radius: ${metrics.radius.large};
   padding: 16px;
-  box-shadow: 0 0 12px rgba(255, 107, 53, 0.06), 0 0 4px rgba(255, 107, 53, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.02);
 `;
 
 export const WidgetHeader = styled.div`
@@ -162,7 +162,7 @@ export const DayWorkoutStatus = styled.span`
   background: ${({ $status }) => {
     switch ($status) {
       case 'finished': return 'rgba(34, 197, 94, 0.15)';
-      case 'started': return 'rgba(255, 107, 53, 0.15)';
+      case 'started': return 'rgba(230, 0, 126, 0.15)';
       case 'overdue': return 'rgba(248, 113, 113, 0.15)';
       default: return 'rgba(153, 153, 153, 0.15)';
     }
@@ -255,7 +255,7 @@ export const HabitQuickButton = styled.button`
   width: 28px;
   height: 28px;
   border-radius: ${metrics.radius.full};
-  background: rgba(255, 107, 53, 0.15);
+  background: rgba(230, 0, 126, 0.15);
   color: ${colors.primary.main};
   font-size: 16px;
   font-weight: 700;
@@ -263,7 +263,7 @@ export const HabitQuickButton = styled.button`
   cursor: pointer;
 
   &:active {
-    background: rgba(255, 107, 53, 0.3);
+    background: rgba(230, 0, 126, 0.3);
   }
 `;
 

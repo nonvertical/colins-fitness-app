@@ -227,7 +227,7 @@ export const EmptyState = styled.div`
 export const ModalBackdrop = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 300;
   animation: ${fadeIn} 200ms ease;
   display: flex;
@@ -329,6 +329,121 @@ export const TypeOption = styled.button`
   }
 `;
 
+export const ToggleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid ${colors.borderSubtle};
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+export const ToggleLabel = styled.span`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${colors.text.light.very};
+`;
+
+export const ToggleSwitch = styled.button`
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background ${metrics.transition.fast};
+  background: ${({ $on }) => ($on ? colors.primary.main : colors.border)};
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: ${({ $on }) => ($on ? '22px' : '2px')};
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left ${metrics.transition.fast};
+  }
+`;
+
+export const ChipGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+`;
+
+export const Chip = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: ${metrics.radius.full};
+  font-size: 13px;
+  font-weight: 500;
+  background: ${colors.surfaceElevated};
+  border: 1px solid ${colors.border};
+  color: ${colors.text.light.very};
+`;
+
+export const ChipRemove = styled.button`
+  background: none;
+  border: none;
+  color: ${colors.text.light.medium};
+  font-size: 14px;
+  padding: 0 0 0 2px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:active {
+    color: ${colors.auxiliar.danger};
+  }
+`;
+
+export const AddChipRow = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+`;
+
+export const SmallInput = styled.input`
+  flex: 1;
+  padding: 8px 10px;
+  background: ${colors.surfaceElevated};
+  border: 1px solid ${colors.border};
+  border-radius: ${metrics.radius.medium};
+  color: ${colors.text.light.very};
+  font-size: 13px;
+
+  &::placeholder {
+    color: ${colors.text.light.medium};
+  }
+
+  &:focus {
+    border-color: ${colors.primary.main};
+  }
+`;
+
+export const SmallButton = styled.button`
+  padding: 8px 14px;
+  background: ${colors.surfaceElevated};
+  border: 1px solid ${colors.border};
+  border-radius: ${metrics.radius.medium};
+  color: ${colors.text.light.medium};
+  font-size: 13px;
+  font-weight: 600;
+  transition: all ${metrics.transition.fast};
+
+  &:active {
+    background: ${colors.border};
+  }
+`;
+
 export const ModalActions = styled.div`
   display: flex;
   gap: 10px;
@@ -392,7 +507,7 @@ export const DetailHeader = styled.div`
 export const BackRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   margin-bottom: 12px;
 `;
 
@@ -421,38 +536,68 @@ export const DetailMeta = styled.div`
   color: ${colors.text.light.medium};
 `;
 
-export const DetailActions = styled.div`
+// ─── More Menu ──────────────────────────────────────────────────────────────
+
+export const MoreButton = styled.div`
   display: flex;
-  gap: 8px;
-  padding: 12px 20px;
-  border-bottom: 1px solid ${colors.border};
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: ${metrics.radius.full};
+  color: ${colors.text.light.medium};
+  font-size: 20px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  position: relative;
+
+  &:active {
+    background: ${colors.surfaceElevated};
+  }
 `;
 
-export const ActionButton = styled.button`
-  flex: 1;
-  padding: 10px;
+export const MoreMenuBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+`;
+
+export const MoreMenuDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  background: ${colors.surface};
+  border: 1px solid ${colors.border};
   border-radius: ${metrics.radius.medium};
-  font-size: 14px;
-  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  animation: ${fadeIn} 120ms ease;
+`;
+
+export const MoreMenuItem = styled.button`
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
   border: none;
-  transition: all ${metrics.transition.fast};
-
-  background: ${({ $variant }) => {
-    if ($variant === 'danger') return 'transparent';
-    return colors.surfaceElevated;
-  }};
-
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background ${metrics.transition.fast};
   color: ${({ $variant }) => {
     if ($variant === 'danger') return colors.auxiliar.danger;
     return colors.text.light.very;
   }};
 
-  border: ${({ $variant }) => (
-    $variant === 'danger' ? `1px solid ${colors.auxiliar.danger}44` : 'none'
-  )};
-
   &:active {
-    transform: scale(0.97);
+    background: ${colors.surfaceElevated};
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid ${colors.borderSubtle};
   }
 `;
 
@@ -580,4 +725,102 @@ export const CalendarMonthLabel = styled.span`
   font-size: 14px;
   font-weight: 600;
   color: ${colors.text.light.very};
+`;
+
+// ─── Cycles ─────────────────────────────────────────────────────────────────
+
+export const CycleSection = styled.div`
+  padding: 16px 20px;
+  border-top: 1px solid ${colors.border};
+`;
+
+export const CycleCurrentCard = styled.div`
+  padding: 12px;
+  background: ${colors.surfaceElevated};
+  border: 1px solid ${colors.border};
+  border-radius: ${metrics.radius.medium};
+  margin-bottom: 12px;
+`;
+
+export const CycleCardRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+export const CycleName = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${colors.text.light.very};
+`;
+
+export const CycleDate = styled.span`
+  font-size: 12px;
+  color: ${colors.text.light.medium};
+  margin-top: 4px;
+`;
+
+export const CycleBadge = styled.span`
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border-radius: ${metrics.radius.full};
+  color: ${({ $active }) => ($active ? colors.auxiliar.success : colors.text.light.medium)};
+  background: ${({ $active }) => ($active ? `${colors.auxiliar.success}22` : `${colors.text.light.medium}22`)};
+`;
+
+export const CycleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: ${colors.surfaceElevated};
+  border-radius: ${metrics.radius.medium};
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background ${metrics.transition.fast};
+
+  &:active {
+    background: ${colors.border};
+  }
+`;
+
+export const CycleRowInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const CycleStat = styled.span`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${colors.text.light.very};
+`;
+
+export const ViewingBanner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: ${colors.primary.main}15;
+  border-bottom: 1px solid ${colors.primary.main}33;
+  font-size: 13px;
+  color: ${colors.primary.main};
+  font-weight: 500;
+`;
+
+export const ViewingBannerButton = styled.button`
+  background: none;
+  border: none;
+  color: ${colors.primary.main};
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+
+  &:active {
+    opacity: 0.7;
+  }
 `;

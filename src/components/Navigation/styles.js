@@ -1,4 +1,4 @@
-import styled, { css, keyframes } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Link } from 'react-router-dom';
 import colors from '../../assets/styles/variables/colors';
 import metrics from '../../assets/styles/variables/metrics';
@@ -80,7 +80,7 @@ export const MobileFAB = styled.button`
   font-size: 22px;
   line-height: 1;
   z-index: 200;
-  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 4px 20px rgba(230, 0, 126, 0.3);
   transition: transform ${metrics.transition.fast}, background ${metrics.transition.fast};
 
   &:active {
@@ -106,7 +106,7 @@ export const Backdrop = styled.div`
   display: block;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 150;
   animation: ${fadeIn} ${metrics.transition.fast};
 
@@ -127,7 +127,7 @@ export const MobileSheet = styled.div`
   overflow: hidden;
   z-index: 200;
   min-width: 200px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   animation: ${slideUp} ${metrics.transition.fast};
 
   @media (min-width: 769px) {

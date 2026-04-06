@@ -14,19 +14,20 @@ export default createGlobalStyle`
   body,
   #root {
     height: 100%;
-    font-family: 'Roboto', 'Segoe UI', Verdana, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Helvetica, Arial, sans-serif;
     background: ${colors.bgColor};
-    color: ${colors.text.light.medium};
+    color: ${colors.text.light.very};
   }
 
   body {
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body,
   input,
   button {
-    font: 14px 'Roboto', 'Segoe UI', Verdana, Arial, sans-serif;
+    font: 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Helvetica, Arial, sans-serif;
   }
 
   *:focus {

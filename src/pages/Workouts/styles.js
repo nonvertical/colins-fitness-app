@@ -170,7 +170,7 @@ export const EmptyState = styled.div`
 export const ModalBackdrop = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 300;
   animation: ${fadeIn} 200ms ease;
   display: flex;
@@ -303,7 +303,7 @@ export const DateInput = styled.input`
   color: ${colors.text.light.very};
   font-size: 15px;
   transition: border-color ${metrics.transition.fast};
-  color-scheme: dark;
+  color-scheme: light;
 
   &:focus {
     border-color: ${colors.primary.main};

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import useLocalStorage from '../../hooks/useLocalStorage';
-import HabitDetail from './HabitDetail';
 import {
   Page,
   Header,
@@ -30,7 +30,6 @@ import {
   TypeOption,
   ModalActions,
   SaveButton,
-  DeleteButton,
 } from './styles';
 
 function generateId() {
@@ -109,18 +108,14 @@ export default function Habits() {
   const [habitLogs, setHabitLogs] = useLocalStorage('habit_logs', []);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [selectedId, setSelectedId] = useState(null);
   const nameInputRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (modal) {
       setTimeout(() => nameInputRef.current?.focus(), 50);
     }
   }, [modal]);
-
-  const selected = habits.find((h) => h.id === selectedId);
-
-  // ─── Add / Edit Habit ──────────────────────────────────────────────────────
 
   function openAdd() {
     setForm(EMPTY_FORM);
@@ -136,29 +131,18 @@ export default function Habits() {
     if (!trimmedName) return;
 
     if (modal.mode === 'add') {
+      const newId = generateId();
       setHabits((prev) => [
         ...prev,
         {
-          id: generateId(),
+          id: newId,
           name: trimmedName,
           type: form.type,
           active: true,
           tracking_start_date: todayStr(),
         },
       ]);
-    } else {
-      setHabits((prev) => prev.map((h) => (
-        h.id === modal.habit.id
-          ? { ...h, name: trimmedName, type: form.type }
-          : h
-      )));
     }
-    closeModal();
-  }
-
-  function handleDelete() {
-    setHabits((prev) => prev.filter((h) => h.id !== modal.habit.id));
-    setHabitLogs((prev) => prev.filter((l) => l.habit_id !== modal.habit.id));
     closeModal();
   }
 
@@ -166,16 +150,12 @@ export default function Habits() {
     if (e.target === e.currentTarget) closeModal();
   }
 
-  // ─── Active Toggle ────────────────────────────────────────────────────────
-
   function toggleActive(habitId, e) {
     e.stopPropagation();
     setHabits((prev) => prev.map((h) => (
       h.id === habitId ? { ...h, active: !h.active } : h
     )));
   }
-
-  // ─── Logging ───────────────────────────────────────────────────────────────
 
   function logDaily(habitId, e) {
     e.stopPropagation();
@@ -193,32 +173,6 @@ export default function Habits() {
       { id: generateId(), habit_id: habitId, timestamp: new Date().toISOString(), value: true },
     ]);
   }
-
-  // ─── Detail View ───────────────────────────────────────────────────────────
-
-  function handleUpdateHabit(updated) {
-    setHabits((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
-  }
-
-  function handleDeleteFromDetail(id) {
-    setHabits((prev) => prev.filter((h) => h.id !== id));
-    setHabitLogs((prev) => prev.filter((l) => l.habit_id !== id));
-    setSelectedId(null);
-  }
-
-  if (selected) {
-    return (
-      <HabitDetail
-        habit={selected}
-        logs={habitLogs.filter((l) => l.habit_id === selected.id)}
-        onUpdate={handleUpdateHabit}
-        onDelete={() => handleDeleteFromDetail(selected.id)}
-        onBack={() => setSelectedId(null)}
-      />
-    );
-  }
-
-  // ─── List View ─────────────────────────────────────────────────────────────
 
   const activeHabits = habits.filter((h) => h.active !== false);
   const inactiveHabits = habits.filter((h) => h.active === false);
@@ -241,7 +195,7 @@ export default function Habits() {
             <span>&#127919;</span>
             <span>No habits yet</span>
             <span style={{ fontSize: 13 }}>
-              Tap "+ Add" to start tracking a habit
+              Tap &quot;+ Add&quot; to start tracking a habit
             </span>
           </EmptyState>
         ) : (
@@ -254,7 +208,7 @@ export default function Habits() {
               const count = todayCount(habitLogs, habit.id);
 
               return (
-                <HabitRow key={habit.id} onClick={() => setSelectedId(habit.id)}>
+                <HabitRow key={habit.id} onClick={() => navigate(`/habits/${habit.id}`)}>
                   <HabitInfo>
                     <HabitName>{habit.name}</HabitName>
                     <HabitMeta>
@@ -297,7 +251,7 @@ export default function Habits() {
                   const isDaily = habit.type !== 'irregular';
 
                   return (
-                    <HabitRow key={habit.id} $inactive onClick={() => setSelectedId(habit.id)}>
+                    <HabitRow key={habit.id} $inactive onClick={() => navigate(`/habits/${habit.id}`)}>
                       <HabitInfo>
                         <HabitName style={{ opacity: 0.5 }}>{habit.name}</HabitName>
                       </HabitInfo>
@@ -319,14 +273,11 @@ export default function Habits() {
         )}
       </List>
 
-      {/* ─── Add / Edit Habit Modal ──────────────────────────────────────────── */}
       {modal && (
         <ModalBackdrop onClick={handleBackdropClick}>
           <ModalSheet>
             <ModalHandle />
-            <ModalTitle>
-              {modal.mode === 'add' ? 'New Habit' : 'Edit Habit'}
-            </ModalTitle>
+            <ModalTitle>New Habit</ModalTitle>
 
             <Label>Name</Label>
             <TextInput
@@ -357,13 +308,8 @@ export default function Habits() {
             </TypeSelector>
 
             <ModalActions>
-              {modal.mode === 'edit' && (
-                <DeleteButton type="button" onClick={handleDelete}>
-                  Delete
-                </DeleteButton>
-              )}
               <SaveButton onClick={handleSave} disabled={!form.name.trim()}>
-                {modal.mode === 'add' ? 'Add Habit' : 'Save Changes'}
+                Add Habit
               </SaveButton>
             </ModalActions>
           </ModalSheet>
