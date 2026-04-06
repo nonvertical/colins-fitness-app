@@ -36,12 +36,7 @@ export default function Navigation() {
       <Sidebar>
         <AppName>
           <DojoLogo size={36} />
-          <AppNameText>
-            <span style={{ color: '#4285F4' }}>D</span>
-            <span style={{ color: '#EA4335' }}>o</span>
-            <span style={{ color: '#FBBC04' }}>j</span>
-            <span style={{ color: '#34A853' }}>o</span>
-          </AppNameText>
+          <AppNameText>Dojo</AppNameText>
         </AppName>
         {NAV_ITEMS.map(({ path, label, icon }) => (
           <NavLink key={path} to={path} $active={pathname === path}>
