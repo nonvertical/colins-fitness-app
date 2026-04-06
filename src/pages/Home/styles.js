@@ -162,7 +162,7 @@ export const DayWorkoutStatus = styled.span`
   background: ${({ $status }) => {
     switch ($status) {
       case 'finished': return 'rgba(34, 197, 94, 0.15)';
-      case 'started': return 'rgba(230, 0, 126, 0.15)';
+      case 'started': return 'rgba(66, 133, 244, 0.15)';
       case 'overdue': return 'rgba(248, 113, 113, 0.15)';
       default: return 'rgba(153, 153, 153, 0.15)';
     }
@@ -255,7 +255,7 @@ export const HabitQuickButton = styled.button`
   width: 28px;
   height: 28px;
   border-radius: ${metrics.radius.full};
-  background: rgba(230, 0, 126, 0.15);
+  background: rgba(66, 133, 244, 0.15);
   color: ${colors.primary.main};
   font-size: 16px;
   font-weight: 700;
@@ -263,7 +263,7 @@ export const HabitQuickButton = styled.button`
   cursor: pointer;
 
   &:active {
-    background: rgba(230, 0, 126, 0.3);
+    background: rgba(66, 133, 244, 0.3);
   }
 `;
 

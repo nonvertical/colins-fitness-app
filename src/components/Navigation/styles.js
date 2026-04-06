@@ -24,17 +24,19 @@ export const Sidebar = styled.nav`
 `;
 
 export const AppName = styled.div`
-  font-size: 18px;
-  font-weight: 700;
-  color: ${colors.text.light.very};
-  letter-spacing: -0.3px;
-  padding: 0 20px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px 24px;
   border-bottom: 1px solid ${colors.border};
   margin-bottom: 12px;
+`;
 
-  span {
-    color: ${colors.primary.main};
-  }
+export const AppNameText = styled.span`
+  font-family: 'Caveat', cursive;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1px;
 `;
 
 export const NavLink = styled(Link)`
@@ -80,7 +82,7 @@ export const MobileFAB = styled.button`
   font-size: 22px;
   line-height: 1;
   z-index: 200;
-  box-shadow: 0 4px 20px rgba(230, 0, 126, 0.3);
+  box-shadow: 0 4px 20px rgba(66, 133, 244, 0.3);
   transition: transform ${metrics.transition.fast}, background ${metrics.transition.fast};
 
   &:active {

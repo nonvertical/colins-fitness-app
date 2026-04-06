@@ -14,7 +14,7 @@ export default createGlobalStyle`
   body,
   #root {
     height: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Patrick Hand', 'Caveat', cursive, sans-serif;
     background: ${colors.bgColor};
     color: ${colors.text.light.very};
   }
@@ -27,7 +27,11 @@ export default createGlobalStyle`
   body,
   input,
   button {
-    font: 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Helvetica, Arial, sans-serif;
+    font: 15px 'Patrick Hand', 'Caveat', cursive, sans-serif;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Caveat', 'Patrick Hand', cursive;
   }
 
   *:focus {

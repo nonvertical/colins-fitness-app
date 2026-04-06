@@ -6,9 +6,9 @@ export default {
   borderSubtle: '#EFEFEF',
 
   primary: {
-    light: '#FF4DA6',
-    main: '#E6007E',
-    dark: '#C20069',
+    light: '#4D8AFF',
+    main: '#4285F4',
+    dark: '#3367C7',
   },
 
   secondary: {
@@ -17,18 +17,26 @@ export default {
     dark: '#3F35A8',
   },
 
+  // Google-like primary palette
+  brand: {
+    blue: '#4285F4',
+    red: '#EA4335',
+    yellow: '#FBBC04',
+    green: '#34A853',
+  },
+
   unit: {
-    reps: '#4F8EF7',
-    time: '#A855F7',
-    distance: '#22C55E',
-    cals: '#E6007E',
+    reps: '#4285F4',
+    time: '#EA4335',
+    distance: '#34A853',
+    cals: '#FBBC04',
   },
 
   auxiliar: {
-    info: '#4F8EF7',
-    success: '#22C55E',
-    warning: '#FBBF24',
-    danger: '#EF4444',
+    info: '#4285F4',
+    success: '#34A853',
+    warning: '#FBBC04',
+    danger: '#EA4335',
   },
 
   text: {

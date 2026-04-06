@@ -73,7 +73,7 @@ export const SectionTitle = styled.h2`
 export const AddButton = styled.button`
   padding: 6px 14px;
   border-radius: ${metrics.radius.full};
-  background: rgba(230, 0, 126, 0.12);
+  background: rgba(66, 133, 244, 0.12);
   border: none;
   color: ${colors.primary.main};
   font-size: 13px;
@@ -82,7 +82,7 @@ export const AddButton = styled.button`
   transition: background ${metrics.transition.fast};
 
   &:active {
-    background: rgba(230, 0, 126, 0.25);
+    background: rgba(66, 133, 244, 0.25);
   }
 `;
 
@@ -306,7 +306,7 @@ export const UnitOption = styled.button`
   padding: 8px 14px;
   border-radius: ${metrics.radius.full};
   border: 1px solid ${({ $active }) => ($active ? colors.primary.main : colors.border)};
-  background: ${({ $active }) => ($active ? 'rgba(230, 0, 126, 0.15)' : 'transparent')};
+  background: ${({ $active }) => ($active ? 'rgba(66, 133, 244, 0.15)' : 'transparent')};
   color: ${({ $active }) => ($active ? colors.primary.main : colors.text.light.medium)};
   font-size: 13px;
   font-weight: 500;

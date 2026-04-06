@@ -4,6 +4,54 @@ All design and functionality changes to the application, in reverse chronologica
 
 ---
 
+## 2026-04-05 — Playful Typography, Hand-Drawn Logo, Google Colors
+
+### Typography
+- Switched to handwritten fonts: **Caveat** for headings, **Patrick Hand** for body text
+- Gives a chalkboard / elementary-school feel throughout the app
+
+### Logo & Branding
+- New hand-drawn SVG meditation figure logo (zen dot, body dome, crossed legs)
+- Logo uses four Google-like primary colors: blue (#4285F4), red (#EA4335), yellow (#FBBC04), green (#34A853)
+- "Dojo" text in sidebar uses Caveat font with each letter in a different Google color
+- Primary brand color updated from cobalt blue to Google blue (#4285F4)
+- Added `brand` color palette (blue, red, yellow, green) to design system
+- Aligned `unit` and `auxiliar` color tokens to match Google palette
+
+---
+
+## 2026-04-05 — Light Theme Redesign, Brand Color Updates
+
+### Light Theme
+- Complete visual overhaul from dark to clean, light, professional UI
+- White surfaces, subtle borders, light elevated backgrounds
+- Updated all component styles across Home, Exercises, Workouts, Habits, Health Profile, Navigation
+
+### Brand Color
+- Changed primary color from orange (#FF6B35) → magenta → cobalt blue → Google blue (#4285F4)
+- Updated all hardcoded rgba values to match current primary color
+
+---
+
+## 2026-04-05 — Habit Detail Routes, Cycles, Timed/Counted Tracking
+
+### Habit Detail as Route
+- Habit detail is now its own page at `/habits/:id` instead of inline
+- More menu (⋯) replaces Edit/Delete buttons for cleaner UI
+
+### Habit Cycles
+- Reset a habit to start a new named cycle (ongoing or fixed duration)
+- Past cycles viewable in reverse chronological order with stats
+- Cycle name is inline-editable
+- Lazy migration for backwards compatibility with existing habits
+
+### Timed & Counted Tracking
+- Edit modal has toggle switches for timed and counted tracking
+- Each toggle reveals configurable quick-entry preset amounts (chips)
+- Add/remove preset chips for fast logging
+
+---
+
 ## 2026-04-05 — Habits Redesign, Widget Home Page
 
 ### Habits Redesign
@@ -82,7 +130,7 @@ All design and functionality changes to the application, in reverse chronologica
 - Home is the default route (`/`)
 - Mobile navigation: floating menu button (lower right) opens a sheet with all page links
 - Desktop navigation: fixed sidebar
-- Dark theme with orange primary color (`#FF6B35`)
+- Light theme with Google blue primary color (`#4285F4`)
 - styled-components for all styling
 - localStorage for all data persistence
 - Renamed app from "React App" to "Dojo" (page title, sidebar branding)

@@ -556,7 +556,7 @@ export default function HabitDetail() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    borderBottom: '1px solid #E6007E',
+                    borderBottom: '1px solid #4285F4',
                     color: '#1D1D1F',
                     fontSize: 14,
                     fontWeight: 600,
